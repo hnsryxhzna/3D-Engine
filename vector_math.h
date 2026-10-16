@@ -21,14 +21,14 @@ typedef struct {
 vec3 vector3(float x, float y, float z);
 vec3 vector3_plus(vec3 v0, vec3 v1);
 vec3 v3_sub(vec3 v0, vec3 v1);
-vec3 vector3_scale(vec3 vector, float scale);
+vec3 vector3_scale(vec3 v0, float scale);
 vec4 vector4(float x, float y, float z, float k);
 vec4 vector4_plus(vec4 v0, vec4 v1);
 float vec3_dot_product(vec3 v0, vec3 v1);
 vec3 vec3_corss_product(vec3 v0, vec3 v1);
 float vec3_len(vec3 vector);
 vec3 vec3_norm(vec3 vector);
-mat4 mat4_identity();
+mat4 mat4_identity(void);
 mat4 mat4_mul(mat4 matrix0, mat4 matrix1);
 vec4 mat4_mul_vec4(mat4 matrix, vec4 vector);
 vec3 mat4_mul_point(mat4 matrix, vec3 vector);
