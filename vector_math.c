@@ -1,7 +1,8 @@
 #include <stdio.h>
-#include <vector_math.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include "vector_math.h"
 
 vec3 vector3(float x, float y, float z) {
     vec3 vector = {x, y, z};
@@ -18,8 +19,8 @@ vec3 v3_sub(vec3 v0, vec3 v1) {
     return vector;
 }
 
-vec3 vector3_scale(vec3 vector, float scale) {
-    vec3 vector = {vector.x * scale, vector.y * scale, vector.z * scale};
+vec3 vector3_scale(vec3 v0, float scale) {
+    vec3 vector = {v0.x * scale, v0.y * scale, v0.z * scale};
     return vector;
 }
 
@@ -55,7 +56,7 @@ vec3 vec3_norm(vec3 vector) {
     return vector3_scale(vector, 1.0f / length);
 }
 
-mat4 mat4_identity() {
+mat4 mat4_identity(void) {
     mat4 M = {{{0}}};
 
     for (int i = 0; i < 4; i++) {
