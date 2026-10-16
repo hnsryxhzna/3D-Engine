@@ -32,7 +32,7 @@ typedef struct {
     float* depth;
 } frame_buffer;
 
-frame_buffer new_franme_buffer(int W, int H);
+frame_buffer new_frame_buffer(int W, int H);
 void fb_free(frame_buffer *fb);
 void fb_clear(frame_buffer *fb, unsigned char r, unsigned char g, unsigned char b);
 void fb_write_ppm(char *file_path, frame_buffer *fb);

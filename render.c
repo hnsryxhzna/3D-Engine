@@ -4,7 +4,7 @@
 
 #include "render.h"
 
-frame_buffer new_franme_buffer(int W, int H) {
+frame_buffer new_frame_buffer(int W, int H) {
     frame_buffer fb;
     fb.W = W;
     fb.H = H;
@@ -33,6 +33,6 @@ void fb_write_ppm(char *file_path, frame_buffer *fb) {
     FILE *f = fopen(file_path, "wb");
     fprintf(f, "P6\n%d %d\n255\n", fb->W, fb->H);
     fwrite(fb->color, 1, (size_t) fb->W * fb->H * 3, f);
-    fclosw(f);
+    fclose(f);
 }
 
