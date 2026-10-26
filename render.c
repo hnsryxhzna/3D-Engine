@@ -36,3 +36,21 @@ void fb_write_ppm(char *file_path, frame_buffer *fb) {
     fclose(f);
 }
 
+void fb_set_pixel(frame_buffer *fb, int x, int y, unsigned char r, unsigned char g, unsigned char b) {
+    if (x < 0 || y < 0 || x > fb->W || y > fb->H) {
+        return;
+    }
+
+    size_t i = ((size_t) y * fb->W + x) * 3;
+    fb->color[i + 0] = r;
+    fb->color[i + 1] = g;
+    fb->color[i + 2] = b;
+}
+
+void draw_dot(frame_buffer *fb, int x, int y, unsigned char r, unsigned char g, unsigned char b) {
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            fb_set_pixel(fb, x + dx, y + dy, r, g, b);
+        }
+    }
+}
