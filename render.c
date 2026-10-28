@@ -31,6 +31,11 @@ void fb_clear(frame_buffer *fb, unsigned char r, unsigned char g, unsigned char 
 
 void fb_write_ppm(char *file_path, frame_buffer *fb) {
     FILE *f = fopen(file_path, "wb");
+    if (!f) {
+        perror(file_path);
+        return;
+    }
+
     fprintf(f, "P6\n%d %d\n255\n", fb->W, fb->H);
     fwrite(fb->color, 1, (size_t) fb->W * fb->H * 3, f);
     fclose(f);
@@ -53,4 +58,40 @@ void draw_dot(frame_buffer *fb, int x, int y, unsigned char r, unsigned char g, 
             fb_set_pixel(fb, x + dx, y + dy, r, g, b);
         }
     }
+}
+
+void draw_line(frame_buffer *fb, int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b) {
+    int dx = abs(x1 - x0), sx = (x0 < x1) ? 1 : -1;
+    int dy = -abs(y1 - y0), sy = (y0 < y1) ? 1 : -1;
+    int err = dx + dy;
+
+    while (1) {
+        fb_set_pixel(fb, x0, y0, r, g, b);
+        if (x0 == x1 && y0 == y1) {
+            break;
+        }
+        int e2 = 2 * err;
+        if (e2 >= dy) {
+            err += dy;
+            x0 += sx;
+        }
+        if (e2 <= dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+int project_vertex(mat4 mvp, vec3 v, int W, int H, int *px, int *py) {
+    vec4 clip = mat4_mul_vec4(mvp, vector4(v.x, v.y, v.z, 1.0f));
+    if (clip.k <= 0.0f) {
+        return 0;
+    }
+
+    float inv_w = 1.0f / clip.k;
+    float ndc_x = clip.x * inv_w;
+    float ndc_y = clip.y * inv_w;
+    *px = (int) ((ndc_x + 1.0f) * 0.5f * W);
+    *py = (int) ((1.0f - ndc_y) * 0.5f * H);
+    return 1;
 }
