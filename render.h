@@ -20,8 +20,8 @@ typedef struct {
 
 typedef struct {
     const vec3* vectors;
-    int nvector;
     const triangle* triangles;
+    int nvector;
     int ntriangle;
 } mesh;
 
@@ -38,5 +38,7 @@ void fb_clear(frame_buffer *fb, unsigned char r, unsigned char g, unsigned char 
 void fb_write_ppm(char *file_path, frame_buffer *fb);
 void fb_set_pixel(frame_buffer *fb, int x, int y, unsigned char r, unsigned char g, unsigned char b);
 void draw_dot(frame_buffer *fb, int x, int y, unsigned char r, unsigned char g, unsigned char b);
+void draw_line(frame_buffer *fb, int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b);
+int project_vertex(mat4 mvp, vec3 v, int W, int H, int *px, int *py);
 
 #endif
