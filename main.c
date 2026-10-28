@@ -6,8 +6,8 @@
 #include "render.h"
 
 #define PI 3.14159265f
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 1600
+#define HEIGHT 900
 #define NFRAMES 60
 
 vec3 cube_vertices[8] = {
@@ -25,7 +25,7 @@ int main(void) {
 
     SDL_Window* window = NULL;
     SDL_Renderer* render = NULL;
-    if (!SDL_CreateWindowAndRenderer("OKOKOK", 1600, 900, SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &render)) {
+    if (!SDL_CreateWindowAndRenderer("OKOKOK", WIDTH, HEIGHT, SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &render)) {
         SDL_Quit();
         return 1;
     }
@@ -88,10 +88,10 @@ int main(void) {
             }
         }
 
-        mat4 model = mat4_mul(mat4_rotate_x(0.6 * cx), mat4_rotate_y(cy * 0.6));
+        mat4 model = mat4_mul(mat4_rotate_x(0.005 * cy), mat4_rotate_y(cx * 0.005));
         mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
 
-        fb_clear(&fb, 30, 60, 90);
+        fb_clear(&fb, 5, 2, 3);
         render_wireframe(&fb, mvp, cube_vertices, cube_edges);
 
         SDL_UpdateTexture(texture, NULL, fb.color, WIDTH * 3);
@@ -99,36 +99,6 @@ int main(void) {
         SDL_RenderTexture(render, texture, NULL, NULL);
         SDL_RenderPresent(render);
     }
-
-
-
-
-
-
-
-
-
-
-    // for (int f = 0; f < NFRAMES; f++) {
-    //     float angle = 2.0f * PI * f / NFRAMES;
-
-    //     mat4 model = mat4_mul(mat4_rotate_x(0.4f), mat4_rotate_y(angle));
-    //     mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
-
-    //     fb_clear(&fb, 30, 60, 90);
-    //     render_wireframe(&fb, mvp, cube_vertices, cube_edges);
-
-    //     char name[64];
-    //     snprintf(name, sizeof name, "frame_%03d.ppm", f);
-    //     fb_write_ppm(name, &fb);
-    // }
-
-
-
-
-
-
-
 
     fb_free(&fb);
     SDL_DestroyRenderer(render);
