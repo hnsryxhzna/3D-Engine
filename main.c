@@ -1,67 +1,138 @@
 #include <stdio.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 #include "vector_math.h"
 #include "render.h"
 
+#define PI 3.14159265f
 #define WIDTH 512
 #define HEIGHT 512
-#define TWO_PI 6.28318530718f
+#define NFRAMES 60
+
+vec3 cube_vertices[8] = {
+    {-1, -1, -1}, { 1, -1, -1}, { 1, 1, -1}, {-1, 1, -1}, {-1, -1, 1}, { 1, -1, 1}, { 1, 1, 1}, {-1, 1, 1}
+};
+
+int cube_edges[12][2] = {
+    {0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}
+};
 
 int main(void) {
-    frame_buffer fb = new_frame_buffer(WIDTH, HEIGHT);
-    fb_clear(&fb, 50, 11, 90);
-
-    vec3 cube[8] = {
-        {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1}, {-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1}
-    };
-
-    mat4 model = mat4_mul(mat4_rotate_y(0.6f), mat4_rotate_x(0.4f));
-    mat4 view = mat4_look_at(vector3(0, 0, 5), vector3(0, 0, 0), vector3(0, 1, 0));
-
-    mat4 proj = mat4_perspective(60.0f * (float) (TWO_PI / 2) / 180.0f, (float) WIDTH / HEIGHT, 0.1f, 100.0f);
-
-    mat4 mv = mat4_mul(view, model);
-    mat4 mvp = mat4_mul(proj, mv);
-
-    float min_x = 1e9f;
-    float max_x = -1e9f;
-    float min_y = 1e9f;
-    float max_y = -1e9f;
-    float min_z = 1e9f;
-    float max_z = -1e9f;
-
-    for (int i = 0; i < 8; i++) {
-        vec3 v = cube[i];
-
-        vec3 cam = mat4_mul_point(mv, v);
-
-        vec4 clip = mat4_mul_vec4(mvp, vector4(v.x, v.y, v.z, 1.0f));
-        if (clip.k <= 0.0f) {
-            fprintf(stderr, "v%d is behind the camera, skipped\n", i);
-            continue;
-        }
-
-        float inv_w = 1.0f / clip.k;
-        vec3 ndc = vector3(clip.x * inv_w, clip.y * inv_w, clip.z * inv_w);
-
-        if (ndc.x < min_x) min_x = ndc.x;
-        if (ndc.x > max_x) max_x = ndc.x;
-        if (ndc.y < min_y) min_y = ndc.y;
-        if (ndc.y > max_y) max_y = ndc.y;
-        if (ndc.z < min_z) min_z = ndc.z;
-        if (ndc.z > max_z) max_z = ndc.z;
-
-        int px = (int)((ndc.x + 1.0f) * 0.5f * WIDTH);
-        int py = (int)((1.0f - ndc.y) * 0.5f * HEIGHT);
-
-        fprintf(stderr, "v%d cam(%6.3f %6.3f %6.3f) clip(%6.3f %6.3f %6.3f %6.3f) " "ndc(%6.3f %6.3f %6.3f) px(%d %d)\n", i, cam.x, cam.y, cam.z, clip.x, clip.y, clip.z, clip.k, ndc.x, ndc.y, ndc.z, px, py);
-        draw_dot(&fb, px, py, 255, 255, 255);
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        return 1;
     }
 
-    fprintf(stderr, "NDC ranges: x[%.3f, %.3f] y[%.3f, %.3f] z[%.3f, %.3f]\n", min_x, max_x, min_y, max_y, min_z, max_z);
+    SDL_Window* window = NULL;
+    SDL_Renderer* render = NULL;
+    if (!SDL_CreateWindowAndRenderer("OKOKOK", 1600, 900, SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &render)) {
+        SDL_Quit();
+        return 1;
+    }
 
-    fb_write_ppm("test.ppm", &fb);
+    printf("density = %f\n", SDL_GetWindowPixelDensity(window));
+
+    SDL_Texture *texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
+    if (texture == NULL) {
+        fprintf(stderr, "Texture failed: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(render);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+
+    float cx = -1.0f;
+    float cy = -1.0f;
+    bool running = true;
+
+    frame_buffer fb = new_frame_buffer(WIDTH, HEIGHT);
+
+    mat4 view = mat4_look_at(vector3(0, 0, 5), vector3(0, 0, 0), vector3(0, 1, 0));
+    mat4 proj = mat4_perspective(60.0f * PI / 180.0f, (float)WIDTH / HEIGHT, 0.1f, 100.0f);
+
+    while (running) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            SDL_ConvertEventToRenderCoordinates(render, &event);
+            switch (event.type) {
+
+            case SDL_EVENT_QUIT:
+                running = false;
+                break;
+ 
+            case SDL_EVENT_MOUSE_MOTION:
+                cx = event.motion.x;
+                cy = event.motion.y;
+                printf("motion x=%7.1f y=%7.1f dx=%+5.1f dy=%+5.1f\n", event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
+                break;
+ 
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                printf("button %u down at (%.1f, %.1f), clicks=%u\n", event.button.button, event.button.x, event.button.y, event.button.clicks);
+                break;
+ 
+            case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+                cx = cy = -1.0f;
+                break;
+ 
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.key == SDLK_ESCAPE) {
+                    running = false;
+                } else if (event.key.key == SDLK_G) {
+                    float gx, gy;
+                    SDL_GetGlobalMouseState(&gx, &gy);
+                    printf("global x=%7.1f y=%7.1f\n", gx, gy);
+                }
+                break;
+            }
+        }
+
+        mat4 model = mat4_mul(mat4_rotate_x(0.6 * cx), mat4_rotate_y(cy * 0.6));
+        mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
+
+        fb_clear(&fb, 30, 60, 90);
+        render_wireframe(&fb, mvp, cube_vertices, cube_edges);
+
+        SDL_UpdateTexture(texture, NULL, fb.color, WIDTH * 3);
+        SDL_RenderClear(render);
+        SDL_RenderTexture(render, texture, NULL, NULL);
+        SDL_RenderPresent(render);
+    }
+
+
+
+
+
+
+
+
+
+
+    // for (int f = 0; f < NFRAMES; f++) {
+    //     float angle = 2.0f * PI * f / NFRAMES;
+
+    //     mat4 model = mat4_mul(mat4_rotate_x(0.4f), mat4_rotate_y(angle));
+    //     mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
+
+    //     fb_clear(&fb, 30, 60, 90);
+    //     render_wireframe(&fb, mvp, cube_vertices, cube_edges);
+
+    //     char name[64];
+    //     snprintf(name, sizeof name, "frame_%03d.ppm", f);
+    //     fb_write_ppm(name, &fb);
+    // }
+
+
+
+
+
+
+
+
     fb_free(&fb);
-
+    SDL_DestroyRenderer(render);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     return 0;
 }

@@ -95,3 +95,21 @@ int project_vertex(mat4 mvp, vec3 v, int W, int H, int *px, int *py) {
     *py = (int) ((1.0f - ndc_y) * 0.5f * H);
     return 1;
 }
+
+void render_wireframe(frame_buffer *fb, mat4 mvp, vec3 cube_vertices[8], int cube_edges[12][2]) {
+    int px[8], py[8], ok[8];
+
+    for (int i = 0; i < 8; i++) {
+        ok[i] = project_vertex(mvp, cube_vertices[i], fb->W, fb->H, &px[i], &py[i]);
+    }
+
+    for (int e = 0; e < 12; e++) {
+        int a = cube_edges[e][0];
+        int b = cube_edges[e][1];
+        if (!ok[a] || !ok[b]) {
+            continue;
+        }
+
+        draw_line(fb, px[a], py[a], px[b], py[b], 255, 255, 255);
+    }
+}
