@@ -40,5 +40,6 @@ void fb_set_pixel(frame_buffer *fb, int x, int y, unsigned char r, unsigned char
 void draw_dot(frame_buffer *fb, int x, int y, unsigned char r, unsigned char g, unsigned char b);
 void draw_line(frame_buffer *fb, int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b);
 int project_vertex(mat4 mvp, vec3 v, int W, int H, int *px, int *py);
+void render_wireframe(frame_buffer *fb, mat4 mvp, vec3 cube_vertices[8], int cube_edges[12][2]);
 
 #endif
