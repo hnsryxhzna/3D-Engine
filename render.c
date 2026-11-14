@@ -70,11 +70,13 @@ void draw_line(frame_buffer *fb, int x0, int y0, int x1, int y1, unsigned char r
         if (x0 == x1 && y0 == y1) {
             break;
         }
+
         int e2 = 2 * err;
         if (e2 >= dy) {
             err += dy;
             x0 += sx;
         }
+
         if (e2 <= dx) {
             err += dx;
             y0 += sy;
@@ -113,3 +115,80 @@ void render_wireframe(frame_buffer *fb, mat4 mvp, vec3 cube_vertices[8], int cub
         draw_line(fb, px[a], py[a], px[b], py[b], 255, 255, 255);
     }
 }
+
+int project_to_screen(mat4 mvp, vec3 vec, int W, int H, vec3* out) {
+    vec4 clip = mat4_mul_vec4(mvp, vector4(vec.x, vec.y, vec.z, 1.0f));
+    if (clip.k <= 0.0f) {
+        return 0;
+    }
+    float inv_w = 1.0f / clip.k;
+    out->x = (clip.x * inv_w + 1.0f) * 0.5f * W;
+    out->y = (1.0f - clip.y * inv_w) * 0.5f * H;
+    out->z = clip.z * inv_w;
+    return 1;
+}
+
+static float edge(vec3 a, vec3 b, float px, float py) {
+    return (b.x - a.x) * (py - a.y) - (b.y - a.y) * (px - a.x);
+}
+
+void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color) {
+    float area = edge(v0, v1, v2.x, v2.y);
+    if (area >= 0.0f) {
+        return;
+    }
+
+    int min_x = (int) floorf(fminf(v0.x, fminf(v1.x, v2.x)));
+    int max_x = (int) ceilf (fmaxf(v0.x, fmaxf(v1.x, v2.x)));
+    int min_y = (int) floorf(fminf(v0.y, fminf(v1.y, v2.y)));
+    int max_y = (int) ceilf (fmaxf(v0.y, fmaxf(v1.y, v2.y)));
+    if (min_x < 0) min_x = 0;
+    if (min_y < 0) min_y = 0;
+    if (max_x > fb->W - 1) max_x = fb->W - 1;
+    if (max_y > fb->H - 1) max_y = fb->H - 1;
+
+    unsigned char r = (unsigned char) (color.x * 255.0f);
+    unsigned char g = (unsigned char) (color.y * 255.0f);
+    unsigned char b = (unsigned char) (color.z * 255.0f);
+
+    for (int y = min_y; y <= max_y; y++) {
+        for (int x = min_x; x <= max_x; x++) {
+            float px = x + 0.5f;
+            float py = y + 0.5f;
+
+            float w0 = edge(v1, v2, px, py) / area;
+            float w1 = edge(v2, v0, px, py) / area;
+            float w2 = edge(v0, v1, px, py) / area;
+
+            if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
+                fb_set_pixel(fb, x, y, r, g, b);
+            }
+        }
+    }
+}
+
+void render_mesh(frame_buffer *fb, const mesh *m, mat4 mvp) {
+    vec3 *screen = malloc(sizeof(vec3) * m->nvector);
+    int *ok = malloc(sizeof(int) * m->nvector);
+    if (screen == NULL || ok == NULL) {
+        free(screen);
+        free(ok);
+        return;
+    }
+
+    for (int i = 0; i < m->nvector; i++) {
+        ok[i] = project_to_screen(mvp, m->vectors[i], fb->W, fb->H, &screen[i]);
+    }
+
+    for (int t = 0; t < m->ntriangle; t++) {
+        triangle tri = m->triangles[t];
+        if (!ok[tri.i0] || !ok[tri.i1] || !ok[tri.i2]) {
+            continue;
+        }
+        draw_triangle(fb, screen[tri.i0], screen[tri.i1], screen[tri.i2], tri.color);
+    }
+
+    free(screen);
+    free(ok);
+}
+
