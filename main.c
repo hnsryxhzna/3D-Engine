@@ -18,6 +18,17 @@ int cube_edges[12][2] = {
     {0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6}, {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7}
 };
 
+triangle cube_triangles[12] = {
+    {4, 5, 6, {1.0f, 0.3f, 0.3f}}, {4, 6, 7, {0.3f, 0.3f, 0.3f}}, {1, 0, 3, {0.3f, 1.0f, 1.0f}}, {1, 3, 2, {0.3f, 1.0f, 1.0f}}, {5, 1, 2, {1.0f, 1.0f, 0.3f}}, {5, 2, 6, {0.3f, 1.0f, 0.3f}}, {0, 4, 7, {1.0f, 0.3f, 1.0f}}, {0, 7, 3, {1.0f, 0.3f, 1.0f}}, {7, 6, 2, {0.3f, 0.3f, 1.0f}}, {7, 2, 3, {0.3f, 0.3f, 1.0f}}, {0, 1, 5, {1.0f, 1.0f, 0.3f}}, {0, 5, 4, {1.0f, 1.0f, 0.3f}}
+};
+
+mesh cube_mesh = {
+    cube_vertices,
+    cube_triangles,
+    8,
+    12
+};
+
 int main(void) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         return 1;
@@ -91,8 +102,9 @@ int main(void) {
         mat4 model = mat4_mul(mat4_rotate_x(0.005 * cy), mat4_rotate_y(cx * 0.005));
         mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
 
-        fb_clear(&fb, 5, 2, 3);
-        render_wireframe(&fb, mvp, cube_vertices, cube_edges);
+        fb_clear(&fb, 0, 0, 0);
+        // render_wireframe(&fb, mvp, cube_vertices, cube_edges);
+        render_mesh(&fb, &cube_mesh, mvp);
 
         SDL_UpdateTexture(texture, NULL, fb.color, WIDTH * 3);
         SDL_RenderClear(render);
