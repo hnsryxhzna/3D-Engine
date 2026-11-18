@@ -4,6 +4,9 @@
 
 #include "render.h"
 
+#define CULL_BACKFACES 1
+int depth_test_enabled = 1;
+
 frame_buffer new_frame_buffer(int W, int H) {
     frame_buffer fb;
     fb.W = W;
@@ -134,7 +137,9 @@ static float edge(vec3 a, vec3 b, float px, float py) {
 
 void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color) {
     float area = edge(v0, v1, v2.x, v2.y);
-    if (area >= 0.0f) {
+    if (area == 0.0f) {
+        return;
+    } else if (CULL_BACKFACES && area > 0.0f) {
         return;
     }
 
@@ -161,7 +166,13 @@ void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color) {
             float w2 = edge(v0, v1, px, py) / area;
 
             if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
-                fb_set_pixel(fb, x, y, r, g, b);
+                float z = w0 * v0.z + w1 * v1.z + w2 * v2.z;
+                size_t idx = (size_t)y * fb->W + x;
+
+                if (depth_test_enabled || z < fb->depth[idx]) {
+                    fb->depth[idx] = z;
+                    fb_set_pixel(fb, x, y, r, g, b);
+                }
             }
         }
     }
@@ -192,3 +203,41 @@ void render_mesh(frame_buffer *fb, const mesh *m, mat4 mvp) {
     free(ok);
 }
 
+void fb_write_depth_ppm(const char *path, const frame_buffer *fb) {
+    float lo = INFINITY;
+    float hi = -INFINITY;
+
+    for (int i = 0; i < fb->W * fb->H; i++) {
+        float d = fb->depth[i];
+        if (isinf(d)) {
+            continue;
+        }
+
+        if (d < lo) {
+            lo = d;
+        }
+        if (d > hi) {
+            hi = d;
+        }
+    }
+
+    FILE *f = fopen(path, "wb");
+    if (f == NULL) {
+        perror(path);
+        return;
+    }
+    fprintf(f, "P6\n%d %d\n255\n", fb->W, fb->H);
+
+    for (int i = 0; i < fb->W * fb->H; i++) {
+        float d = fb->depth[i];
+        unsigned char g = 0;
+        if (!isinf(d) && hi > lo) {
+            g = (unsigned char) (255.0f * (1.0f - (d - lo) / (hi - lo)));
+        }
+
+        unsigned char px[3] = {g, g, g};
+        fwrite(px, 1, 3, f);
+    }
+
+    fclose(f);
+}

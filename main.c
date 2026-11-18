@@ -59,9 +59,10 @@ int main(void) {
     bool running = true;
 
     frame_buffer fb = new_frame_buffer(WIDTH, HEIGHT);
-
     mat4 view = mat4_look_at(vector3(0, 0, 5), vector3(0, 0, 0), vector3(0, 1, 0));
-    mat4 proj = mat4_perspective(60.0f * PI / 180.0f, (float)WIDTH / HEIGHT, 0.1f, 100.0f);
+    mat4 proj = mat4_perspective(60.0f * PI / 180.0f, (float) WIDTH / HEIGHT, 0.1f, 100.0f);
+
+    // Uint64 start_ms = SDL_GetTicks();
 
     while (running) {
         SDL_Event event;
@@ -94,17 +95,30 @@ int main(void) {
                     float gx, gy;
                     SDL_GetGlobalMouseState(&gx, &gy);
                     printf("global x=%7.1f y=%7.1f\n", gx, gy);
+                } else if (event.key.key == SDLK_Z) {
+                    depth_test_enabled = !depth_test_enabled;
+                    fprintf(stderr, "depth test %s\n", depth_test_enabled ? "ON" : "OFF");
+                } else if (event.key.key == SDLK_D) {
+                    fb_write_depth_ppm("depth.ppm", &fb);
+                    fprintf(stderr, "saved depth.ppm\n");
                 }
                 break;
             }
         }
 
-        mat4 model = mat4_mul(mat4_rotate_x(0.005 * cy), mat4_rotate_y(cx * 0.005));
-        mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
+        // mat4 model = mat4_mul(mat4_rotate_x(0.005 * cy), mat4_rotate_y(cx * 0.005));
+        float angle = 0.005f * cx;
 
+        mat4 model_a = mat4_mul(mat4_rotate_x(0.4f), mat4_rotate_y(angle));
+        mat4 model_b = mat4_mul(mat4_translate(0.8f, 0.3f, 0.0f), mat4_mul(mat4_rotate_x(-angle), mat4_rotate_y(0.5f)));
+
+        // mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
         fb_clear(&fb, 0, 0, 0);
         // render_wireframe(&fb, mvp, cube_vertices, cube_edges);
-        render_mesh(&fb, &cube_mesh, mvp);
+        // render_mesh(&fb, &cube_mesh, mvp);
+
+        render_mesh(&fb, &cube_mesh, mat4_mul(proj, mat4_mul(view, model_a)));
+        render_mesh(&fb, &cube_mesh, mat4_mul(proj, mat4_mul(view, model_b)));
 
         SDL_UpdateTexture(texture, NULL, fb.color, WIDTH * 3);
         SDL_RenderClear(render);
@@ -113,6 +127,7 @@ int main(void) {
     }
 
     fb_free(&fb);
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(render);
     SDL_DestroyWindow(window);
     SDL_Quit();
