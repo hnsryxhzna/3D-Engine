@@ -169,7 +169,7 @@ void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color) {
                 float z = w0 * v0.z + w1 * v1.z + w2 * v2.z;
                 size_t idx = (size_t)y * fb->W + x;
 
-                if (depth_test_enabled || z < fb->depth[idx]) {
+                if (!depth_test_enabled || z < fb->depth[idx]) {
                     fb->depth[idx] = z;
                     fb_set_pixel(fb, x, y, r, g, b);
                 }
