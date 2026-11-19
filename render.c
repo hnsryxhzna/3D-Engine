@@ -159,9 +159,9 @@ void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color) {
     // unsigned char g = (unsigned char) (color.y * 255.0f);
     // unsigned char b = (unsigned char) (color.z * 255.0f);
 
-    unsigned char r = (unsigned char) (color.x);
-    unsigned char g = (unsigned char) (color.y);
-    unsigned char b = (unsigned char) (color.z);
+    unsigned char r = (unsigned char) ((int) color.x % 255);
+    unsigned char g = (unsigned char) ((int) color.y % 255);
+    unsigned char b = (unsigned char) ((int) color.z % 255);
 
     for (int y = min_y; y <= max_y; y++) {
         for (int x = min_x; x <= max_x; x++) {
@@ -263,7 +263,7 @@ void fb_write_depth_ppm(const char *path, const frame_buffer *fb) {
 }
 
 float flat_indensity(vec3 a, vec3 b, vec3 c) {
-    vec3 normal = vec3_norm(vec3_corss_product(v3_sub(a, b), v3_sub(a, c)));
+    vec3 normal = vec3_norm(vec3_corss_product(vector3_sub(a, b), vector3_sub(a, c)));
     vec3 light = light_direction;
 
     float diffuse = vec3_dot_product(normal, light);

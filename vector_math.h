@@ -20,7 +20,7 @@ typedef struct {
 
 vec3 vector3(float x, float y, float z);
 vec3 vector3_plus(vec3 v0, vec3 v1);
-vec3 v3_sub(vec3 v0, vec3 v1);
+vec3 vector3_sub(vec3 v0, vec3 v1);
 vec3 vector3_scale(vec3 v0, float scale);
 vec4 vector4(float x, float y, float z, float k);
 vec4 vector4_plus(vec4 v0, vec4 v1);

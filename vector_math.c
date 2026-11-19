@@ -14,7 +14,7 @@ vec3 vector3_plus(vec3 v0, vec3 v1) {
     return vector;
 }
 
-vec3 v3_sub(vec3 v0, vec3 v1) {
+vec3 vector3_sub(vec3 v0, vec3 v1) {
     vec3 vector = {v0.x - v1.x, v0.y - v1.y, v0.z - v1.z};
     return vector;
 }
@@ -129,7 +129,7 @@ mat4 mat4_rotate_y(float a) {
 }
 
 mat4 mat4_look_at(vec3 eye, vec3 target, vec3 up) {
-    vec3 z = vec3_norm(v3_sub(eye, target));
+    vec3 z = vec3_norm(vector3_sub(eye, target));
     vec3 x = vec3_norm(vec3_corss_product(up, z));
     vec3 y = vec3_corss_product(z, x);
     mat4 res = mat4_identity();

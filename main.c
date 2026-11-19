@@ -22,8 +22,17 @@ int cube_edges[12][2] = {
 //     {4, 5, 6, {1.0f, 0.3f, 0.3f}}, {4, 6, 7, {0.3f, 0.3f, 0.3f}}, {1, 0, 3, {0.3f, 1.0f, 1.0f}}, {1, 3, 2, {0.3f, 1.0f, 1.0f}}, {5, 1, 2, {1.0f, 1.0f, 0.3f}}, {5, 2, 6, {0.3f, 1.0f, 0.3f}}, {0, 4, 7, {1.0f, 0.3f, 1.0f}}, {0, 7, 3, {1.0f, 0.3f, 1.0f}}, {7, 6, 2, {0.3f, 0.3f, 1.0f}}, {7, 2, 3, {0.3f, 0.3f, 1.0f}}, {0, 1, 5, {1.0f, 1.0f, 0.3f}}, {0, 5, 4, {1.0f, 1.0f, 0.3f}}
 // };
 
+// triangle cube_triangles[12] = {
+//     {4, 5, 6, {247.0f, 37.0f, 133.0f}}, {4, 6, 7, {247.0f, 37.0f, 133.0f}}, {1, 0, 3, {181.0f, 23.0f, 158.0f}}, {1, 3, 2, {181.0f, 23.0f, 158.0f}}, {5, 1, 2, {114.0f, 9.0f, 183.0f}}, {5, 2, 6, {114.0f, 9.0f, 183.0f}}, {0, 4, 7, {86.0f, 11.0f, 173.0f}}, {0, 7, 3, {86.0f, 11.0f, 173.0f}}, {7, 6, 2, {72.0f, 12.0f, 168.0f}}, {7, 2, 3, {72.0f, 12.0f, 168.0f}}, {0, 1, 5, {58.0f, 12.0f, 163.0f}}, {0, 5, 4, {58.0f, 12.0f, 163.0f}}
+// };
+
 triangle cube_triangles[12] = {
-    {4, 5, 6, {247.0f, 37.0f, 133.0f}}, {4, 6, 7, {247.0f, 37.0f, 133.0f}}, {1, 0, 3, {181.0f, 23.0f, 158.0f}}, {1, 3, 2, {181.0f, 23.0f, 158.0f}}, {5, 1, 2, {114.0f, 9.0f, 183.0f}}, {5, 2, 6, {114.0f, 9.0f, 183.0f}}, {0, 4, 7, {86.0f, 11.0f, 173.0f}}, {0, 7, 3, {86.0f, 11.0f, 173.0f}}, {7, 6, 2, {72.0f, 12.0f, 168.0f}}, {7, 2, 3, {72.0f, 12.0f, 168.0f}}, {0, 1, 5, {58.0f, 12.0f, 163.0f}}, {0, 5, 4, {58.0f, 12.0f, 163.0f}}
+    {4, 5, 6, {210.0f, 15.0f, 57.0f}}, {4, 6, 7, {210.0f, 15.0f, 57.0f}},
+    {1, 0, 3, { 64.0f, 160.0f, 43.0f}}, {1, 3, 2, { 64.0f, 160.0f, 43.0f}},
+    {5, 1, 2, { 30.0f, 102.0f, 245.0f}}, {5, 2, 6, { 30.0f, 102.0f, 245.0f}},
+    {0, 4, 7, {136.0f, 57.0f, 239.0f}}, {0, 7, 3, {136.0f, 57.0f, 239.0f}},
+    {7, 6, 2, {223.0f, 142.0f, 29.0f}}, {7, 2, 3, {223.0f, 142.0f, 29.0f}},
+    {0, 1, 5, {254.0f, 100.0f, 11.0f}}, {0, 5, 4, {254.0f, 100.0f, 11.0f}}
 };
 
 mesh cube_mesh = {
@@ -43,26 +52,6 @@ static void render_scene(frame_buffer *fb, mat4 model_a, mat4 model_b, mat4 vp, 
         render_mesh(fb, &cube_mesh, model_a, vp);
     }
 }
-
-// static int count_order_differences(mat4 mvp_a, mat4 mvp_b, int W, int H) {
-//     frame_buffer f1 = new_frame_buffer(W, H);
-//     frame_buffer f2 = new_frame_buffer(W, H);
-//     render_scene(&f1, mvp_a, mvp_b, 0);
-//     render_scene(&f2, mvp_a, mvp_b, 1);
-
-//     int diff = 0;
-//     for (int i = 0; i < W * H; i++) {
-//         if (f1.color[i * 3 + 0] != f2.color[i * 3 + 0] ||
-//             f1.color[i * 3 + 1] != f2.color[i * 3 + 1] ||
-//             f1.color[i * 3 + 2] != f2.color[i * 3 + 2]) {
-//             diff++;
-//         }
-//     }
-
-//     fb_free(&f1);
-//     fb_free(&f2);
-//     return diff;
-// }
 
 int main(void) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -89,8 +78,8 @@ int main(void) {
 
     SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
-    float cx = -1.0f;
-    float cy = -1.0f;
+    // float cx = -1.0f;
+    // float cy = -1.0f;
     bool running = true;
 
     frame_buffer fb = new_frame_buffer(WIDTH, HEIGHT);
@@ -98,9 +87,10 @@ int main(void) {
     mat4 proj = mat4_perspective(60.0f * PI / 180.0f, (float) WIDTH / HEIGHT, 0.1f, 100.0f);
 
     // Uint64 start_ms = SDL_GetTicks();
-
     int swap_order = 0;
-    // int compare_requested = 0;
+    int dragging = false;
+    float sensitivity = 0.005f;
+    mat4 rotation = mat4_identity();
 
     while (running) {
         SDL_Event event;
@@ -113,17 +103,34 @@ int main(void) {
                 break;
  
             case SDL_EVENT_MOUSE_MOTION:
-                cx = event.motion.x;
-                cy = event.motion.y;
+                // cx = event.motion.x;
+                // cy = event.motion.y;
+                
+                if (dragging) {
+                    mat4 ro = mat4_mul(mat4_rotate_x(event.motion.yrel * sensitivity), mat4_rotate_y(event.motion.xrel * sensitivity));
+                    rotation = mat4_mul(ro, rotation);
+                }
+
                 printf("motion x=%7.1f y=%7.1f dx=%+5.1f dy=%+5.1f\n", event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
                 break;
  
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    dragging = true;
+                }
+
                 printf("button %u down at (%.1f, %.1f), clicks=%u\n", event.button.button, event.button.x, event.button.y, event.button.clicks);
+                break;
+
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    dragging = false;
+                }
+
                 break;
  
             case SDL_EVENT_WINDOW_MOUSE_LEAVE:
-                cx = cy = -1.0f;
+                // cx = cy = -1.0f;
                 break;
  
             case SDL_EVENT_KEY_DOWN:
@@ -142,8 +149,6 @@ int main(void) {
                 } else if (event.key.key == SDLK_O) {
                     swap_order = !swap_order;
                     fprintf(stderr, "draw order: %s\n", swap_order ? "B then A" : "A then B");
-                } else if (event.key.key == SDLK_C) {
-                    // compare_requested = 1;
                 } else if (event.key.key == SDLK_L) {
                     light_enabled = !light_enabled;
                     fprintf(stderr, "lighting %s\n", light_enabled ? "ON" : "OFF");
@@ -153,10 +158,14 @@ int main(void) {
         }
 
         // mat4 model = mat4_mul(mat4_rotate_x(0.005 * cy), mat4_rotate_y(cx * 0.005));
-        float angle = 0.005f * cx;
+        // float angle_x = 0.005f * cx;
+        // float angle_y = 0.005f * cy;
 
-        mat4 model_a = mat4_mul(mat4_rotate_x(0.4f), mat4_rotate_y(angle));
-        mat4 model_b = mat4_mul(mat4_translate(1.0f, 1.0f, 1.0f), mat4_mul(mat4_rotate_x(-angle), mat4_rotate_y(0.5f)));
+        // mat4 model_a = mat4_mul(mat4_rotate_x(angle_y), mat4_rotate_y(angle_x));
+        // mat4 model_b = mat4_mul(mat4_translate(0.5f, 0.5f, 0.5f), mat4_mul(mat4_rotate_x(angle_y), mat4_rotate_y(angle_x)));
+        
+        mat4 model_a = rotation;
+        mat4 model_b = mat4_mul(mat4_mul(mat4_translate(0.5f, 0.5f, 0.5f), mat4_mul(mat4_rotate_x(180), mat4_rotate_y(180))), rotation);
 
         // mat4 mvp = mat4_mul(proj, mat4_mul(view, model));
         // fb_clear(&fb, 0, 0, 0);
@@ -168,12 +177,6 @@ int main(void) {
         mat4 vp = mat4_mul(proj, view);
 
         render_scene(&fb, model_a, model_b, vp, swap_order);
-
-        // if (compare_requested) {
-        //     int diff = count_order_differences(mvp_a, mvp_b, WIDTH, HEIGHT);
-        //     fprintf(stderr, "pixels that differ between draw orders: %d\n", diff);
-        //     compare_requested = 0;
-        // }
 
         SDL_UpdateTexture(texture, NULL, fb.color, WIDTH * 3);
         SDL_RenderClear(render);
