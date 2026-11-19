@@ -92,13 +92,15 @@ vec4 mat4_mul_vec4(mat4 matrix, vec4 vector) {
 }
 
 vec3 mat4_mul_point(mat4 matrix, vec3 vector) {
-    vec4 res = mat4_mul_vec4(matrix, (vec4){vector.x, vector.y, vector.z, 1.0f});
+    vec4 res = mat4_mul_vec4(matrix, (vec4) {vector.x, vector.y, vector.z, 1.0f});
     return vector3(res.x, res.y, res.z);
 }
 
 mat4 mat4_translate(float tx, float ty, float tz) {
     mat4 res = mat4_identity();
-    res.matrix[0][3] = tx; res.matrix[1][3] = ty; res.matrix[2][3] = tz;
+    res.matrix[0][3] = tx;
+    res.matrix[1][3] = ty;
+    res.matrix[2][3] = tz;
     return res;
 }
 

@@ -4,7 +4,8 @@
 #include "vector_math.h"
 
 extern int depth_test_enabled;
-
+extern int light_enabled;
+extern vec3 light_direction;
 
 typedef struct {
     int i0;
@@ -47,8 +48,9 @@ void render_wireframe(frame_buffer *fb, mat4 mvp, vec3 cube_vertices[8], int cub
 
 int project_to_screen(mat4 mvp, vec3 vec, int W, int H, vec3 *out);
 void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color);
-void render_mesh(frame_buffer *fb, const mesh *m, mat4 mvp);
+void render_mesh(frame_buffer *fb, const mesh *m, mat4 model, mat4 vp);
 
 void fb_write_depth_ppm(const char *path, const frame_buffer *fb);
+float flat_indensity(vec3 a, vec3 b, vec3 c);
 
 #endif

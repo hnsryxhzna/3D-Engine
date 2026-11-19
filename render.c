@@ -6,6 +6,8 @@
 
 #define CULL_BACKFACES 1
 int depth_test_enabled = 1;
+int light_enabled = 1;
+vec3 light_direction = {1.0f, 1.0f, 1.0f};
 
 frame_buffer new_frame_buffer(int W, int H) {
     frame_buffer fb;
@@ -152,9 +154,13 @@ void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color) {
     if (max_x > fb->W - 1) max_x = fb->W - 1;
     if (max_y > fb->H - 1) max_y = fb->H - 1;
 
-    unsigned char r = (unsigned char) (color.x * 255.0f);
-    unsigned char g = (unsigned char) (color.y * 255.0f);
-    unsigned char b = (unsigned char) (color.z * 255.0f);
+    // unsigned char r = (unsigned char) (color.x * 255.0f);
+    // unsigned char g = (unsigned char) (color.y * 255.0f);
+    // unsigned char b = (unsigned char) (color.z * 255.0f);
+
+    unsigned char r = (unsigned char) (color.x);
+    unsigned char g = (unsigned char) (color.y);
+    unsigned char b = (unsigned char) (color.z);
 
     for (int y = min_y; y <= max_y; y++) {
         for (int x = min_x; x <= max_x; x++) {
@@ -178,16 +184,21 @@ void draw_triangle(frame_buffer *fb, vec3 v0, vec3 v1, vec3 v2, vec3 color) {
     }
 }
 
-void render_mesh(frame_buffer *fb, const mesh *m, mat4 mvp) {
+void render_mesh(frame_buffer *fb, const mesh *m, mat4 model, mat4 vp) {
+    mat4 mvp = mat4_mul(vp, model);
+
+    vec3 *world = malloc(sizeof(vec3) * m->nvector);
     vec3 *screen = malloc(sizeof(vec3) * m->nvector);
     int *ok = malloc(sizeof(int) * m->nvector);
-    if (screen == NULL || ok == NULL) {
+    if (world == NULL || screen == NULL || ok == NULL) {
+        free(world);
         free(screen);
         free(ok);
         return;
     }
 
     for (int i = 0; i < m->nvector; i++) {
+        world[i] = mat4_mul_point(model, m->vectors[i]);
         ok[i] = project_to_screen(mvp, m->vectors[i], fb->W, fb->H, &screen[i]);
     }
 
@@ -196,9 +207,17 @@ void render_mesh(frame_buffer *fb, const mesh *m, mat4 mvp) {
         if (!ok[tri.i0] || !ok[tri.i1] || !ok[tri.i2]) {
             continue;
         }
+        
+        vec3 color = tri.color;
+        if (light_enabled) {
+            float l = flat_indensity(world[tri.i0], world[tri.i1], world[tri.i2]);
+            color = vector3_scale(color, l);
+        }
+
         draw_triangle(fb, screen[tri.i0], screen[tri.i1], screen[tri.i2], tri.color);
     }
 
+    free(world);
     free(screen);
     free(ok);
 }
@@ -240,4 +259,13 @@ void fb_write_depth_ppm(const char *path, const frame_buffer *fb) {
     }
 
     fclose(f);
+}
+
+float flat_indensity(vec3 a, vec3 b, vec3 c) {
+    vec3 normal = vec3_norm(vec3_corss_product(v3_sub(a, b), v3_sub(a, c)));
+    vec3 light = light_direction;
+
+    float diffuse = vec3_dot_product(normal, light);
+
+    return diffuse;
 }
