@@ -7,6 +7,7 @@
 #define CULL_BACKFACES 1
 int depth_test_enabled = 1;
 int light_enabled = 1;
+float ambient_light_intensity = 0.2f;
 vec3 light_direction = {1.0f, 1.0f, 1.0f};
 
 frame_buffer new_frame_buffer(int W, int H) {
@@ -214,7 +215,7 @@ void render_mesh(frame_buffer *fb, const mesh *m, mat4 model, mat4 vp) {
             color = vector3_scale(color, l);
         }
 
-        draw_triangle(fb, screen[tri.i0], screen[tri.i1], screen[tri.i2], tri.color);
+        draw_triangle(fb, screen[tri.i0], screen[tri.i1], screen[tri.i2], color);
     }
 
     free(world);
@@ -267,5 +268,5 @@ float flat_indensity(vec3 a, vec3 b, vec3 c) {
 
     float diffuse = vec3_dot_product(normal, light);
 
-    return diffuse;
+    return ambient_light_intensity + (1 - ambient_light_intensity) * diffuse;
 }
